@@ -1,25 +1,29 @@
 const observers = new Set();
 
-const notify = (a) => {
-  observers.forEach((observer) => {
-    if (runMap.get(observer)?.has(a)) {
-      observer();
-    }
-  });
-};
-
 const runMap = new Map();
 
 let currentObserver = null;
+
+const callObserver = (observer) => {
+  currentObserver = observer;
+  observer();
+  currentObserver = null;
+};
+
+const notify = (a) => {
+  observers.forEach((observer) => {
+    if (runMap.get(observer)?.has(a)) {
+      callObserver(observer);
+    }
+  });
+};
 
 // The autorun function accepts one function that should run every time anything it observes changes.
 // It also runs once when you create the autorun itself.
 // Returns a disposer function that you need to call in order to cancel it.
 export const autorun = (observer) => {
   runMap.set(observer, new Set());
-  currentObserver = observer;
-  observer();
-  currentObserver = null;
+  callObserver(observer);
   observers.add(observer);
   return () => {
     runMap.delete(observer);
